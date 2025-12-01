@@ -14,6 +14,7 @@ services:
     depends_on:
       - redis
       - postgres-n8n-chat
+      - ollama            # <--- adicionamos isso
 
   redis:
     image: redis:7
@@ -46,6 +47,17 @@ services:
       timeout: 5s
       retries: 5
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # se quiser deixar em PT-BR, não precisa de mais nada aqui
+
 volumes:
   n8n_data:
   postgres_n8n_chat_data:
+  ollama_data:
