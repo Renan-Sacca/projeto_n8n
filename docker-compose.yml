@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   n8n:
@@ -6,11 +6,46 @@ services:
     container_name: n8n
     restart: unless-stopped
     ports:
-      - "5678:5678"
+      - "${N8N_PORT}:5678"
     env_file:
       - .env
     volumes:
       - n8n_data:/home/node/.n8n
+    depends_on:
+      - redis
+      - postgres-n8n-chat
+
+  redis:
+    image: redis:7
+    container_name: redis
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    restart: always
+
+  postgres-n8n-chat:
+    image: postgres:16
+    container_name: postgres-n8n-chat
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_n8n_chat_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   n8n_data:
+  postgres_n8n_chat_data:
